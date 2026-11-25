@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_AsIs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Reconciliation Assistant case study" exporterVersion="1.0">
+  <bpmn:collaboration id="Collab_AsIs">
+    <bpmn:participant id="Pool_AsIs" name="Payment reconciliation - as-is (manual)" processRef="Process_AsIs" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_AsIs" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_AsIs">
+      <bpmn:lane id="Lane_Analyst" name="Operations analyst">
+        <bpmn:flowNodeRef>Start_Received</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Read</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Lookup</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Compare</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Diff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LogMatch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LogExc</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Large</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Done</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Checker" name="Checker (team lead)">
+        <bpmn:flowNodeRef>Task_Check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Checked</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Received" name="Payment confirmation received (PDF)">
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Read" name="Open PDF and read employee ID, amount, date">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Lookup" name="Find expected amount in payroll register (Excel)">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Compare" name="Calculate difference between amounts">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_Diff" name="Difference 1% or more?">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_LogMatch" name="Mark as matched in Excel tracker">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_LogExc" name="Record exception and investigate with sender">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:outgoing>F8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_Merge" name="">
+      <bpmn:incoming>F7</bpmn:incoming>
+      <bpmn:incoming>F8</bpmn:incoming>
+      <bpmn:outgoing>F9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Large" name="Amount above 500?">
+      <bpmn:incoming>F9</bpmn:incoming>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Check" name="Second check of large payment (four-eyes)">
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Done" name="Reconciliation recorded">
+      <bpmn:incoming>F10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Checked" name="Large payment checked">
+      <bpmn:incoming>F12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="F1" sourceRef="Start_Received" targetRef="Task_Read" />
+    <bpmn:sequenceFlow id="F2" sourceRef="Task_Read" targetRef="Task_Lookup" />
+    <bpmn:sequenceFlow id="F3" sourceRef="Task_Lookup" targetRef="Task_Compare" />
+    <bpmn:sequenceFlow id="F4" sourceRef="Task_Compare" targetRef="Gw_Diff" />
+    <bpmn:sequenceFlow id="F5" name="No" sourceRef="Gw_Diff" targetRef="Task_LogMatch" />
+    <bpmn:sequenceFlow id="F6" name="Yes" sourceRef="Gw_Diff" targetRef="Task_LogExc" />
+    <bpmn:sequenceFlow id="F7" sourceRef="Task_LogMatch" targetRef="Gw_Merge" />
+    <bpmn:sequenceFlow id="F8" sourceRef="Task_LogExc" targetRef="Gw_Merge" />
+    <bpmn:sequenceFlow id="F9" sourceRef="Gw_Merge" targetRef="Gw_Large" />
+    <bpmn:sequenceFlow id="F10" name="No" sourceRef="Gw_Large" targetRef="End_Done" />
+    <bpmn:sequenceFlow id="F11" name="Yes" sourceRef="Gw_Large" targetRef="Task_Check" />
+    <bpmn:sequenceFlow id="F12" sourceRef="Task_Check" targetRef="End_Checked" />
+    <bpmn:textAnnotation id="Note_Retype">
+      <bpmn:text>Pain point: 3 fields retyped from every PDF; layouts differ by sender</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Rule">
+      <bpmn:text>Pain point: 1% tolerance applied by judgement; calculation not stored</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Trail">
+      <bpmn:text>Pain point: Excel tracker has no audit trail of who changed what</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_FourEyes">
+      <bpmn:text>Pain point: four-eyes check depends on the analyst remembering to pass it on</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Note_Retype_assoc" sourceRef="Task_Read" targetRef="Note_Retype" />
+    <bpmn:association id="Note_Rule_assoc" sourceRef="Task_Compare" targetRef="Note_Rule" />
+    <bpmn:association id="Note_Trail_assoc" sourceRef="Task_LogMatch" targetRef="Note_Trail" />
+    <bpmn:association id="Note_FourEyes_assoc" sourceRef="Gw_Large" targetRef="Note_FourEyes" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_AsIs">
+    <bpmndi:BPMNPlane id="Plane_AsIs" bpmnElement="Collab_AsIs">
+      <bpmndi:BPMNShape id="Pool_AsIs_di" bpmnElement="Pool_AsIs" isHorizontal="true">
+        <dc:Bounds x="20" y="120" width="1300" height="460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Analyst_di" bpmnElement="Lane_Analyst" isHorizontal="true">
+        <dc:Bounds x="50" y="120" width="1270" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Checker_di" bpmnElement="Lane_Checker" isHorizontal="true">
+        <dc:Bounds x="50" y="420" width="1270" height="160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Received_di" bpmnElement="Start_Received">
+        <dc:Bounds x="110" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="78" y="294" width="100" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Read_di" bpmnElement="Task_Read">
+        <dc:Bounds x="180" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Lookup_di" bpmnElement="Task_Lookup">
+        <dc:Bounds x="330" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Compare_di" bpmnElement="Task_Compare">
+        <dc:Bounds x="480" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Diff_di" bpmnElement="Gw_Diff" isMarkerVisible="true">
+        <dc:Bounds x="630" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="684" y="256" width="90" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LogMatch_di" bpmnElement="Task_LogMatch">
+        <dc:Bounds x="730" y="145" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LogExc_di" bpmnElement="Task_LogExc">
+        <dc:Bounds x="730" y="315" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Merge_di" bpmnElement="Gw_Merge" isMarkerVisible="true">
+        <dc:Bounds x="890" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="855" y="239" width="120" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Large_di" bpmnElement="Gw_Large" isMarkerVisible="true">
+        <dc:Bounds x="980" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1013" y="215" width="90" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Check_di" bpmnElement="Task_Check">
+        <dc:Bounds x="1070" y="460" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Done_di" bpmnElement="End_Done">
+        <dc:Bounds x="1260" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1228" y="294" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Checked_di" bpmnElement="End_Checked">
+        <dc:Bounds x="1260" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1228" y="524" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Retype_di" bpmnElement="Note_Retype">
+        <dc:Bounds x="120" y="20" width="220" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Rule_di" bpmnElement="Note_Rule">
+        <dc:Bounds x="380" y="20" width="230" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Trail_di" bpmnElement="Note_Trail">
+        <dc:Bounds x="640" y="20" width="220" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_FourEyes_di" bpmnElement="Note_FourEyes">
+        <dc:Bounds x="900" y="20" width="250" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="146" y="270" />
+        <di:waypoint x="180" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="292" y="270" />
+        <di:waypoint x="330" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3">
+        <di:waypoint x="442" y="270" />
+        <di:waypoint x="480" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4">
+        <di:waypoint x="592" y="270" />
+        <di:waypoint x="630" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5">
+        <di:waypoint x="655" y="245" />
+        <di:waypoint x="655" y="185" />
+        <di:waypoint x="730" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6">
+        <di:waypoint x="655" y="295" />
+        <di:waypoint x="655" y="355" />
+        <di:waypoint x="730" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7">
+        <di:waypoint x="842" y="185" />
+        <di:waypoint x="915" y="185" />
+        <di:waypoint x="915" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8">
+        <di:waypoint x="842" y="355" />
+        <di:waypoint x="915" y="355" />
+        <di:waypoint x="915" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9">
+        <di:waypoint x="940" y="270" />
+        <di:waypoint x="980" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1030" y="270" />
+        <di:waypoint x="1260" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="1005" y="295" />
+        <di:waypoint x="1005" y="500" />
+        <di:waypoint x="1070" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="1182" y="500" />
+        <di:waypoint x="1260" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_Retype_assoc_di" bpmnElement="Note_Retype_assoc">
+        <di:waypoint x="236" y="230" />
+        <di:waypoint x="236" y="84" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_Rule_assoc_di" bpmnElement="Note_Rule_assoc">
+        <di:waypoint x="536" y="230" />
+        <di:waypoint x="536" y="84" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_Trail_assoc_di" bpmnElement="Note_Trail_assoc">
+        <di:waypoint x="786" y="145" />
+        <di:waypoint x="786" y="84" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_FourEyes_assoc_di" bpmnElement="Note_FourEyes_assoc">
+        <di:waypoint x="1005" y="245" />
+        <di:waypoint x="1005" y="84" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

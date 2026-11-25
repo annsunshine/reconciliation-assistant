@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_ToBe" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Reconciliation Assistant case study" exporterVersion="1.0">
+  <bpmn:collaboration id="Collab_ToBe">
+    <bpmn:participant id="Pool_ToBe" name="Payment reconciliation - to-be (Reconciliation Assistant)" processRef="Process_ToBe" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ToBe" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_ToBe">
+      <bpmn:lane id="Lane_System" name="Power Automate flow">
+        <bpmn:flowNodeRef>Start_File</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Extract</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Expected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Employee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Diff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Diff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Matched</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Exception</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Flag</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Log</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Auto</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Reviewer" name="Operations analyst">
+        <bpmn:flowNodeRef>Task_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Reviewed</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_File" name="PDF arrives in Payment Inbox">
+      <bpmn:outgoing>G1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_Extract" name="Extract employee ID, amount, date (AI Builder)">
+      <bpmn:incoming>G1</bpmn:incoming>
+      <bpmn:outgoing>G2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Expected" name="Get expected amount (Excel payroll register)">
+      <bpmn:incoming>G2</bpmn:incoming>
+      <bpmn:outgoing>G3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Employee" name="Find employee record (Dataverse)">
+      <bpmn:incoming>G3</bpmn:incoming>
+      <bpmn:outgoing>G4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Diff" name="Calculate difference %">
+      <bpmn:incoming>G4</bpmn:incoming>
+      <bpmn:outgoing>G5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Diff" name="Difference 1% or more?">
+      <bpmn:incoming>G5</bpmn:incoming>
+      <bpmn:outgoing>G6</bpmn:outgoing>
+      <bpmn:outgoing>G7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_Matched" name="Set status: Matched">
+      <bpmn:incoming>G6</bpmn:incoming>
+      <bpmn:outgoing>G8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Exception" name="Set status: Exception">
+      <bpmn:incoming>G7</bpmn:incoming>
+      <bpmn:outgoing>G9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Merge" name="">
+      <bpmn:incoming>G8</bpmn:incoming>
+      <bpmn:incoming>G9</bpmn:incoming>
+      <bpmn:outgoing>G10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_Flag" name="Set review flag (above 500 = For Review)">
+      <bpmn:incoming>G10</bpmn:incoming>
+      <bpmn:outgoing>G11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Log" name="Write row to Reconciliation Log (Dataverse)">
+      <bpmn:incoming>G11</bpmn:incoming>
+      <bpmn:outgoing>G12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Review" name="Exception or For Review?">
+      <bpmn:incoming>G12</bpmn:incoming>
+      <bpmn:outgoing>G13</bpmn:outgoing>
+      <bpmn:outgoing>G14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Auto" name="Closed automatically">
+      <bpmn:incoming>G13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Review" name="Review and resolve in the dashboard">
+      <bpmn:incoming>G14</bpmn:incoming>
+      <bpmn:outgoing>G15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Reviewed" name="Reviewed">
+      <bpmn:incoming>G15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="G1" sourceRef="Start_File" targetRef="Task_Extract" />
+    <bpmn:sequenceFlow id="G2" sourceRef="Task_Extract" targetRef="Task_Expected" />
+    <bpmn:sequenceFlow id="G3" sourceRef="Task_Expected" targetRef="Task_Employee" />
+    <bpmn:sequenceFlow id="G4" sourceRef="Task_Employee" targetRef="Task_Diff" />
+    <bpmn:sequenceFlow id="G5" sourceRef="Task_Diff" targetRef="Gw_Diff" />
+    <bpmn:sequenceFlow id="G6" name="No" sourceRef="Gw_Diff" targetRef="Task_Matched" />
+    <bpmn:sequenceFlow id="G7" name="Yes" sourceRef="Gw_Diff" targetRef="Task_Exception" />
+    <bpmn:sequenceFlow id="G8" sourceRef="Task_Matched" targetRef="Gw_Merge" />
+    <bpmn:sequenceFlow id="G9" sourceRef="Task_Exception" targetRef="Gw_Merge" />
+    <bpmn:sequenceFlow id="G10" sourceRef="Gw_Merge" targetRef="Task_Flag" />
+    <bpmn:sequenceFlow id="G11" sourceRef="Task_Flag" targetRef="Task_Log" />
+    <bpmn:sequenceFlow id="G12" sourceRef="Task_Log" targetRef="Gw_Review" />
+    <bpmn:sequenceFlow id="G13" name="No" sourceRef="Gw_Review" targetRef="End_Auto" />
+    <bpmn:sequenceFlow id="G14" name="Yes" sourceRef="Gw_Review" targetRef="Task_Review" />
+    <bpmn:sequenceFlow id="G15" sourceRef="Task_Review" targetRef="End_Reviewed" />
+    <bpmn:textAnnotation id="Note_AI">
+      <bpmn:text>Custom AI model: 15 of 15 fields correct on 5 unseen layouts</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Rule">
+      <bpmn:text>Same 1% rule every time; difference % stored with the record</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Flag">
+      <bpmn:text>Four-eyes kept: review flag is independent of the match result</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Note_Log">
+      <bpmn:text>One row per payment, linked to the employee, with created by / on audit fields</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Note_AI_assoc" sourceRef="Task_Extract" targetRef="Note_AI" />
+    <bpmn:association id="Note_Rule_assoc" sourceRef="Task_Diff" targetRef="Note_Rule" />
+    <bpmn:association id="Note_Flag_assoc" sourceRef="Task_Flag" targetRef="Note_Flag" />
+    <bpmn:association id="Note_Log_assoc" sourceRef="Task_Log" targetRef="Note_Log" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_ToBe">
+    <bpmndi:BPMNPlane id="Plane_ToBe" bpmnElement="Collab_ToBe">
+      <bpmndi:BPMNShape id="Pool_ToBe_di" bpmnElement="Pool_ToBe" isHorizontal="true">
+        <dc:Bounds x="20" y="120" width="1640" height="460" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="50" y="120" width="1610" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Reviewer_di" bpmnElement="Lane_Reviewer" isHorizontal="true">
+        <dc:Bounds x="50" y="420" width="1610" height="160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_File_di" bpmnElement="Start_File">
+        <dc:Bounds x="104" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="72" y="294" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Extract_di" bpmnElement="Task_Extract">
+        <dc:Bounds x="170" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Expected_di" bpmnElement="Task_Expected">
+        <dc:Bounds x="312" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Employee_di" bpmnElement="Task_Employee">
+        <dc:Bounds x="454" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Diff_di" bpmnElement="Task_Diff">
+        <dc:Bounds x="596" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Diff_di" bpmnElement="Gw_Diff" isMarkerVisible="true">
+        <dc:Bounds x="748" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="802" y="256" width="90" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Matched_di" bpmnElement="Task_Matched">
+        <dc:Bounds x="838" y="145" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Exception_di" bpmnElement="Task_Exception">
+        <dc:Bounds x="838" y="315" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Merge_di" bpmnElement="Gw_Merge" isMarkerVisible="true">
+        <dc:Bounds x="990" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="955" y="239" width="120" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Flag_di" bpmnElement="Task_Flag">
+        <dc:Bounds x="1080" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Log_di" bpmnElement="Task_Log">
+        <dc:Bounds x="1222" y="230" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Review_di" bpmnElement="Gw_Review" isMarkerVisible="true">
+        <dc:Bounds x="1374" y="245" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1339" y="211" width="120" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Auto_di" bpmnElement="End_Auto">
+        <dc:Bounds x="1600" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1568" y="294" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Review_di" bpmnElement="Task_Review">
+        <dc:Bounds x="1464" y="460" width="112" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Reviewed_di" bpmnElement="End_Reviewed">
+        <dc:Bounds x="1600" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1568" y="524" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_AI_di" bpmnElement="Note_AI">
+        <dc:Bounds x="110" y="20" width="230" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Rule_di" bpmnElement="Note_Rule">
+        <dc:Bounds x="500" y="20" width="230" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Flag_di" bpmnElement="Note_Flag">
+        <dc:Bounds x="920" y="20" width="230" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Note_Log_di" bpmnElement="Note_Log">
+        <dc:Bounds x="1200" y="20" width="250" height="64" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="G1_di" bpmnElement="G1">
+        <di:waypoint x="140" y="270" />
+        <di:waypoint x="170" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G2_di" bpmnElement="G2">
+        <di:waypoint x="282" y="270" />
+        <di:waypoint x="312" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G3_di" bpmnElement="G3">
+        <di:waypoint x="424" y="270" />
+        <di:waypoint x="454" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G4_di" bpmnElement="G4">
+        <di:waypoint x="566" y="270" />
+        <di:waypoint x="596" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G5_di" bpmnElement="G5">
+        <di:waypoint x="708" y="270" />
+        <di:waypoint x="748" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G6_di" bpmnElement="G6">
+        <di:waypoint x="773" y="245" />
+        <di:waypoint x="773" y="185" />
+        <di:waypoint x="838" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G7_di" bpmnElement="G7">
+        <di:waypoint x="773" y="295" />
+        <di:waypoint x="773" y="355" />
+        <di:waypoint x="838" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G8_di" bpmnElement="G8">
+        <di:waypoint x="950" y="185" />
+        <di:waypoint x="1015" y="185" />
+        <di:waypoint x="1015" y="245" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G9_di" bpmnElement="G9">
+        <di:waypoint x="950" y="355" />
+        <di:waypoint x="1015" y="355" />
+        <di:waypoint x="1015" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G10_di" bpmnElement="G10">
+        <di:waypoint x="1040" y="270" />
+        <di:waypoint x="1080" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G11_di" bpmnElement="G11">
+        <di:waypoint x="1192" y="270" />
+        <di:waypoint x="1222" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G12_di" bpmnElement="G12">
+        <di:waypoint x="1334" y="270" />
+        <di:waypoint x="1374" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G13_di" bpmnElement="G13">
+        <di:waypoint x="1424" y="270" />
+        <di:waypoint x="1600" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G14_di" bpmnElement="G14">
+        <di:waypoint x="1399" y="295" />
+        <di:waypoint x="1399" y="500" />
+        <di:waypoint x="1464" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G15_di" bpmnElement="G15">
+        <di:waypoint x="1576" y="500" />
+        <di:waypoint x="1600" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_AI_assoc_di" bpmnElement="Note_AI_assoc">
+        <di:waypoint x="226" y="230" />
+        <di:waypoint x="226" y="84" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_Rule_assoc_di" bpmnElement="Note_Rule_assoc">
+        <di:waypoint x="652" y="230" />
+        <di:waypoint x="652" y="84" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_Flag_assoc_di" bpmnElement="Note_Flag_assoc">
+        <di:waypoint x="1136" y="230" />
+        <di:waypoint x="1136" y="84" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Note_Log_assoc_di" bpmnElement="Note_Log_assoc">
+        <di:waypoint x="1278" y="230" />
+        <di:waypoint x="1278" y="84" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
