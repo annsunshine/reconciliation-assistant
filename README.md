@@ -6,6 +6,8 @@ A PDF lands in a OneDrive folder. Within seconds its contents are extracted by a
 
 **Stack:** Power Automate · AI Builder · Dataverse · Excel Online · Power Apps
 
+**Business analysis case study:** [process diagrams, user stories, business case](ba-case-study/README.md)
+
 ---
 
 ## Data and privacy
