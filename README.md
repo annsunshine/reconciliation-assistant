@@ -45,7 +45,7 @@ An event-driven flow that runs on file arrival and produces a structured, querya
 | **Extract** | Custom AI Builder model reads worker ID, amount and date regardless of layout |
 | **Cross-check** | Expected amount is pulled from the payroll table in Excel |
 | **Enrich** | Employee record is resolved in Dataverse and linked through a many-to-one relationship |
-| **Classify** | Percentage difference computed; over 5% → `Exception`, otherwise `Matched` |
+| **Classify** | Percentage difference computed; 1% or more → `Exception`, under 1% → `Matched` |
 | **Flag** | Amounts above 500 → `For Review`, otherwise `Auto-approved` |
 | **Log** | A row is written to the Reconciliation Log table |
 
@@ -66,7 +66,7 @@ flowchart TD
     G --> H["Get expected amount<br/>Compose - float conversion"]
     H --> I["List rows Dataverse<br/>Employee - OData filter on employee id"]
     I --> J["Compose<br/>Diff Percent = pdf minus excel, over excel, times 100"]
-    J --> K{"Check if Matched<br/>absolute difference under 5 percent"}
+    J --> K{"Check if Matched<br/>absolute difference under 1 percent"}
     K -->|True| L["Status = Matched"]
     K -->|False| M["Status = Exception"]
     L --> N["Add a new row<br/>Dataverse - Reconciliation Log<br/>Flag set by expression on Amount PDF"]
